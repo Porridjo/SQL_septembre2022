@@ -100,7 +100,7 @@ AS SELECT c.id_commande,
   c.client
   FROM exam2022.commandes c
     LEFT OUTER JOIN exam2022.lignes_de_commande l ON c.id_commande = l.commande
-  WHERE type_livraison = 'livraison'
+  WHERE c.type_livraison = 'livraison'
   GROUP BY c.id_commande, c.date_commande, c.type_livraison, c.client;
 
 /*
