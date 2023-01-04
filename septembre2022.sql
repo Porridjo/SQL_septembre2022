@@ -53,7 +53,7 @@ DECLARE
   _article RECORD;
 BEGIN
   SELECT quantite_maximal, prix, poids FROM exam2022.articles WHERE id_article = NEW.article INTO _article;
-  IF (_article.quantite_maximal IS NOT NULL AND (SELECT SUM(quantite) FROM exam2022.lignes_de_commande WHERE article = NEW.article) + 1 >_article.quantite_maximal)
+  IF (_article.quantite_maximal IS NOT NULL AND (SELECT quantite FROM exam2022.lignes_de_commande WHERE commande = NEW.commande AND article = NEW.article) + 1 >_article.quantite_maximal)
   THEN raise 'quantité maximale autorisée dépassée';
   END IF;
 
@@ -83,8 +83,8 @@ INSERT INTO exam2022.commandes VALUES (DEFAULT, 'David', '02/12/2022', 'à empor
 
 /* cas quantité maximal dépassé*/
 SELECT exam2022.ajouterArticleAuPanier(1,3);
-SELECT exam2022.ajouterArticleAuPanier(2,3);
--- SELECT exam2022.ajouterArticleAuPanier(3,3);
+SELECT exam2022.ajouterArticleAuPanier(1,3);
+-- SELECT exam2022.ajouterArticleAuPanier(1,3);
 
 /* cas prix total > 1000 pour commande de type livraison */
 SELECT exam2022.ajouterArticleAuPanier(1,2);
