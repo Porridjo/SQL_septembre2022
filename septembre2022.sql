@@ -6,7 +6,7 @@ CREATE TABLE exam2022.articles (
   nom CHARACTER VARYING(100) NOT NULL CHECK(nom <> ''),
   prix INTEGER NOT NULL CHECK(prix >= 0),
   poids INTEGER NOT NULL CHECK(poids > 0),
-  quantite_maximal INTEGER
+  quantite_maximal INTEGER CHECK(quantite_maximal > 0 OR quantite_maximal IS NULL)
 );
 
 CREATE TABLE exam2022.commandes (
@@ -14,7 +14,7 @@ CREATE TABLE exam2022.commandes (
   client CHARACTER VARYING(100) NOT NULL CHECK(client <> ''),
   date_commande DATE NOT NULL,
   type_livraison CHARACTER VARYING(20) NOT NULL CHECK(type_livraison = 'livraison' OR type_livraison = 'à emporter'),
-  poids INTEGER NOT NULL DEFAULT 0
+  poids INTEGER NOT NULL DEFAULT 0 CHECK(poids >= 0)
 );
 
 CREATE TABLE exam2022.lignes_de_commande (
@@ -58,7 +58,7 @@ BEGIN
   END IF;
 
   SELECT type_livraison FROM exam2022.commandes WHERE id_commande = NEW.commande INTO _type;
-  IF (_type = 'livraison' AND NEW.quantite * _article.prix > 1000)
+  IF (_type = 'livraison' AND (SELECT SUM(a.prix*l.quantite) FROM exam2022.articles a, exam2022.lignes_de_commande l WHERE a.id_article = l.article AND commande = NEW.commande) + _article.prix > 1000)
   THEN raise 'prix total de la commande dépasse 1000 euros';
   END IF;
 
@@ -72,7 +72,7 @@ CREATE TRIGGER verifierLignesTrigger BEFORE INSERT OR UPDATE ON exam2022.lignes_
     FOR EACH ROW EXECUTE PROCEDURE exam2022.verifierLignes();
 
 
-INSERT INTO exam2022.articles VALUES (DEFAULT, 'article1', 10, 10, NULL);
+INSERT INTO exam2022.articles VALUES (DEFAULT, 'article1', 100, 10, NULL);
 INSERT INTO exam2022.articles VALUES (DEFAULT, 'article2', 400, 10, NULL);
 INSERT INTO exam2022.articles VALUES (DEFAULT, 'article3', 10, 10, 2);
 INSERT INTO exam2022.commandes VALUES (DEFAULT, 'David', '01/12/2022', 'livraison', DEFAULT);
@@ -89,7 +89,8 @@ SELECT exam2022.ajouterArticleAuPanier(1,3);
 /* cas prix total > 1000 pour commande de type livraison */
 SELECT exam2022.ajouterArticleAuPanier(1,2);
 SELECT exam2022.ajouterArticleAuPanier(1,2);
--- SELECT exam2022.ajouterArticleAuPanier(1,2);
+SELECT exam2022.ajouterArticleAuPanier(1,1);
+--SELECT exam2022.ajouterArticleAuPanier(1,1);
 
 CREATE OR REPLACE VIEW exam2022.vue (id_commande, date_commande, type_livraison, nb_articles_commandes, client)
 AS SELECT c.id_commande,
@@ -99,11 +100,12 @@ AS SELECT c.id_commande,
   c.client
   FROM exam2022.commandes c
     LEFT OUTER JOIN exam2022.lignes_de_commande l ON c.id_commande = l.commande
+  WHERE type_livraison = 'livraison'
   GROUP BY c.id_commande, c.date_commande, c.type_livraison, c.client;
 
 /*
 SELECT id_commande, date_commande, type_livraison, nb_articles_commandes
 FROM exam2022.vue
-WHERE client = 'David' AND type_livraison = 'livraison'
+WHERE client = 'David'
 ORDER BY date_commande
  */
