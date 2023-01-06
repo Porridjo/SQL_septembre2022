@@ -6,7 +6,7 @@ CREATE TABLE exam2022.articles (
   nom CHARACTER VARYING(100) NOT NULL CHECK(nom <> ''),
   prix INTEGER NOT NULL CHECK(prix >= 0),
   poids INTEGER NOT NULL CHECK(poids > 0),
-  quantite_maximale INTEGER CHECK(quantite_maximale > 0 OR quantite_maximale IS NULL)
+  quantite_maximale INTEGER CHECK(quantite_maximale > 0)
 );
 
 CREATE TABLE exam2022.commandes (
@@ -53,7 +53,7 @@ DECLARE
   _article RECORD;
 BEGIN
   SELECT quantite_maximale, prix, poids FROM exam2022.articles WHERE id_article = NEW.article INTO _article;
-  IF (_article.quantite_maximale IS NOT NULL AND (SELECT quantite FROM exam2022.lignes_de_commande WHERE commande = NEW.commande AND article = NEW.article) + 1 >_article.quantite_maximale)
+  IF ((SELECT quantite FROM exam2022.lignes_de_commande WHERE commande = NEW.commande AND article = NEW.article) + 1 >_article.quantite_maximale)
   THEN raise 'quantité maximale autorisée dépassée';
   END IF;
 
