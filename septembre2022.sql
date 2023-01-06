@@ -92,11 +92,10 @@ SELECT exam2022.ajouterArticleAuPanier(1,2);
 SELECT exam2022.ajouterArticleAuPanier(1,1);
 --SELECT exam2022.ajouterArticleAuPanier(1,1);
 
-CREATE OR REPLACE VIEW exam2022.vue (id_commande, date_commande, type_livraison, nb_articles_commandes, client)
+CREATE OR REPLACE VIEW exam2022.vue (id_commande, date_commande, nb_articles_commandes, client)
 AS SELECT c.id_commande,
   c.date_commande,
-  c.type_livraison,
-  COALESCE(SUM(l.quantite), 0),
+  COALESCE(COUNT(l.article), 0),
   c.client
   FROM exam2022.commandes c
     LEFT OUTER JOIN exam2022.lignes_de_commande l ON c.id_commande = l.commande
@@ -104,7 +103,7 @@ AS SELECT c.id_commande,
   GROUP BY c.id_commande, c.date_commande, c.type_livraison, c.client;
 
 /*
-SELECT id_commande, date_commande, type_livraison, nb_articles_commandes
+SELECT id_commande, date_commande, nb_articles_commandes
 FROM exam2022.vue
 WHERE client = 'David'
 ORDER BY date_commande
